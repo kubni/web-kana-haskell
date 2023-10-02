@@ -3,16 +3,13 @@ module Controllers (index, generateHiraganaCharacter, missing) where
 
 import KanaTables (hiraganaTable)
 
--- This is a "trick" that lets us keep the Text type, yet requires us to use T.func_name, so we get best of the both worlds for readability
--- This is done in the first place because Data.Text has a lot of ambiguous conflicts with Prelude
 import Data.Text (Text)
 import qualified Data.Text as T
 
 import Data.Map ((!), keys)
 import Web.Twain
 import System.Random as Random
-import Control.Monad.IO.Class ( MonadIO(liftIO) )
-
+import Control.Monad.IO.Class (liftIO)
 
 
 
@@ -25,10 +22,10 @@ index = send $ html "Hello World!"
 generateHiraganaCharacter :: ResponderM a
 generateHiraganaCharacter = do
   let columns = keys hiraganaTable
-  randomColumnInt <- liftIO $ generateRandomInteger 0 (length hiraganaTable)
+  randomColumnInt <- liftIO $ generateRandomInteger 0 (length columns - 1)
 
   let randomColumn = hiraganaTable ! (columns !! randomColumnInt)
-  randomCharInt <- liftIO $ generateRandomInteger 0 (length randomColumn)
+  randomCharInt <- liftIO $ generateRandomInteger 0 (length randomColumn - 1)
 
   let randomChar = randomColumn !! randomCharInt
   send $ text $ T.pack randomChar
@@ -52,6 +49,10 @@ generateRandomInteger a b = do
   randomSeed <- getRandomSeed
   let randomIntGen = createRandomIntGen randomSeed
   return $ head $ Random.randomRs (a, b) randomIntGen
+
+
+
+
 
 -- TODO: The following is equivalent
 -- generateRandomInteger = curry randomRIO
