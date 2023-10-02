@@ -12,4 +12,4 @@ routes =
   ]
 
 routeNotFound :: Application
-routeNotFound = notFound Controllers.missing
+routeNotFound = notFound missing
