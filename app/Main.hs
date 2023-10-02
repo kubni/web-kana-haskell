@@ -3,7 +3,8 @@ module Main where
 
 import Network.Wai.Handler.Warp (run)
 import Web.Twain
-
+import Data.Text as T hiding (foldr, index)
+import KanaTables (hiraganaTable, (!))
 
 main :: IO ()
 main = do
@@ -22,7 +23,10 @@ routes =
 
 -- TODO: Move these functions to `controllers` module
 index :: ResponderM a
-index = send $ html "Hello World!"
+-- index = send $ html "Hello World!"
+index = do
+  let testString = hiraganaTable ! "vowels_column" !! 0
+  send $ text $ T.pack testString
 
 echoName :: ResponderM a
 echoName = do
