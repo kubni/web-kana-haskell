@@ -15,8 +15,6 @@ import Control.Monad.IO.Class ( MonadIO(liftIO) )
 
 
 
----- TESTING ----
--- import GHC.IO.Encoding.UTF8
 
 
 
@@ -33,7 +31,7 @@ generateHiraganaCharacter = do
   randomCharInt <- liftIO $ generateRandomInteger 0 (length randomColumn)
 
   let randomChar = randomColumn !! randomCharInt
-  send $ text $ T.pack (show randomChar)   -- FIXME: show doesn't display the character properly like putStr would and instead displays ASCII
+  send $ text $ T.pack randomChar
 
 
 missing :: ResponderM a
