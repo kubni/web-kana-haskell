@@ -1,4 +1,4 @@
-module KanaTables (hiraganaTable, katakanaTable, romajiHiraganaTable, romajiKatakanaTable, (!)) where
+module KanaTables (hiraganaTable, katakanaTable, romajiHiraganaTable, romajiKatakanaTable) where
 
 import Data.Map (fromList, (!))
 
