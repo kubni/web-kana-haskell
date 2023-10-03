@@ -26,7 +26,8 @@ executable web-kana-backend
     other-modules:
         Routes,
         Controllers,
-        KanaTables
+        KanaTables,
+        RandomGenerators
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
