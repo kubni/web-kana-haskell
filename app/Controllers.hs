@@ -1,4 +1,5 @@
 {-# language OverloadedStrings #-}
+
 module Controllers (index, generateHiraganaCharacter, missing) where
 
 import KanaTables (hiraganaTable)

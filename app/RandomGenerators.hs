@@ -7,8 +7,7 @@ createRandomIntGen = mkStdGen
 
 getRandomSeed :: IO Int
 getRandomSeed = do
-  randomSrc <- getStdGen
-  return $ fst $ Random.random randomSrc
+  fst . Random.random <$> getStdGen
 
 generateRandomInteger :: Int -> Int -> IO Int
 generateRandomInteger a b = do

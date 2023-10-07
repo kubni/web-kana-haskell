@@ -26,6 +26,7 @@ executable web-kana-backend
     other-modules:
         Routes,
         Controllers,
+        Models,
         KanaTables,
         RandomGenerators
 
