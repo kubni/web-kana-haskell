@@ -2,18 +2,17 @@
 
 module Controllers (index, generateHiraganaCharacter, missing) where
 
-import KanaTables (hiraganaTable)
-import RandomGenerators
 
 import Data.Text (Text)
 import qualified Data.Text as T
-
 import Data.Map ((!), keys)
 import Web.Twain
 import Control.Monad.IO.Class (liftIO)
 
 
-
+import KanaTables (hiraganaTable)
+import RandomGenerators
+--import Models ( Player(Player), insertOne, insertMany)  -- Player(Player) means that we import the Player constructor for type Player
 
 
 --------- Actual controllers -------------
