@@ -12,17 +12,17 @@ getTableName = "results"
 getDatabaseConnection :: IO Connection
 getDatabaseConnection = connectODBC getDatabaseName
 
--- data Player = Player {
---   ID :: Int,
---   Username :: String,
---   Score :: Int,
---   Rank :: Int
--- }
+data Player = Player {
+  id_num :: Int,
+  username :: String,
+  score :: Int,
+  rank :: Int
+ }
 
-insertOne :: IO ()
-insertOne = do
+insertOne :: Player ->  IO ()
+insertOne player = do
   conn <- getDatabaseConnection
   stmt <- prepare conn $ "INSERT INTO " ++ getTableName ++ " VALUES (?, ?, ?, ?)"
-  execute stmt [toSql (1 :: Int), toSql "Role", toSql (10 :: Int), toSql (1 :: Int)]
+  execute stmt [toSql $ id_num player, toSql $ username player, toSql $ score player, toSql $ rank player]
   commit conn
   disconnect conn
