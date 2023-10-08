@@ -1,4 +1,4 @@
-module Models (Player(..), insertOne, insertMany, updateOne, updateMany) where
+module Models (Player(..), insertOne, insertMany, updateOne, updateMany, deleteOne, deleteMany) where
 
 import Database.HDBC.ODBC (connectODBC, Connection)
 import Database.HDBC as HDBC
@@ -39,10 +39,6 @@ insertMany players = do
   commit conn
   disconnect conn
 
-
-
-
-
 -- TODO: There is a lot of duplicate code here...
 -- It receives an already updated Player instance which it then just needs to use to update the actual database row.
 -- The update on the haskell data type instance will happen in the controller via Lens probably
@@ -50,9 +46,9 @@ insertMany players = do
 updateOne :: Player -> IO ()
 updateOne updatedPlayer = do
   conn <- getDatabaseConnection
-  stmt <- prepare conn $ "  UPDATE " ++ getTableName ++ "\n \
-                          \ SET score=?, rank=?\n \
-                          \ WHERE id=?"
+  stmt <- prepare conn $ " UPDATE " ++ getTableName ++ "\n \
+                         \ SET score=?, rank=?\n \
+                         \ WHERE id=?"
   execute stmt [toSql $ score updatedPlayer, toSql $ rank updatedPlayer, toSql $ id_num updatedPlayer]
   commit conn
   disconnect conn
@@ -64,6 +60,27 @@ updateMany updatedPlayers = do
                           \ SET score=?, rank=?\n \
                           \ WHERE id=?"
   let placeholderValues = map (\updatedPlayer -> [toSql $ score updatedPlayer, toSql $ rank updatedPlayer, toSql $ id_num updatedPlayer])  updatedPlayers
+  executeMany stmt placeholderValues
+  commit conn
+  disconnect conn
+
+
+-- TODO: id_name is enough for deletion, but for the sake of it having the same form as other db operations i have used Player -> IO() instead of Int -> IO() -- *subject to change*
+deleteOne :: Player -> IO()
+deleteOne player = do
+  conn <- getDatabaseConnection
+  stmt <- prepare conn $ " DELETE FROM " ++ getTableName ++ "\n \
+                         \ WHERE id=?"
+  execute stmt [toSql $ id_num player]
+  commit conn
+  disconnect conn
+
+deleteMany :: [Player] -> IO()
+deleteMany players = do
+  conn <- getDatabaseConnection
+  stmt <- prepare conn $ " DELETE FROM " ++ getTableName ++ "\n \
+                         \ WHERE id=?"
+  let placeholderValues = map (\player -> [toSql $ id_num player]) players
   executeMany stmt placeholderValues
   commit conn
   disconnect conn
