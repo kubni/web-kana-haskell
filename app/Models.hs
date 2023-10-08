@@ -1,4 +1,4 @@
-module Models (Player(..), insertOne, insertMany, updateOne, updateMany, deleteOne, deleteMany) where
+module Models (Player(..), insertOne, insertMany, updateOne, updateMany, deleteOne, deleteMany, calculateNumberOfPages) where
 
 import Database.HDBC.ODBC (connectODBC, Connection)
 import Database.HDBC as HDBC
@@ -84,3 +84,13 @@ deleteMany players = do
   executeMany stmt placeholderValues
   commit conn
   disconnect conn
+
+
+-- Pagination logic
+calculateNumberOfPages :: Int -> IO Int
+calculateNumberOfPages playersPerPage = do
+  conn <- getDatabaseConnection
+  queryResult <- quickQuery' conn ("SELECT count(*) from " ++ getTableName) []   -- The result here will be something like [[x]] where x is the SqlValue number of items/rows in the table
+  let totalNumberOfPlayers = fromSql $ head $ head queryResult :: Int
+  let floatDivResult = (fromIntegral totalNumberOfPlayers :: Float) / (fromIntegral playersPerPage :: Float)
+  return (ceiling floatDivResult :: Int)
