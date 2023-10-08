@@ -1,4 +1,10 @@
-module Models (Player(..), insertOne, insertMany, updateOne, updateMany, deleteOne, deleteMany, calculateNumberOfPages) where
+module Models (
+  Player(..),
+  insertOne, insertMany,
+  updateOne, updateMany,
+  deleteOne, deleteMany,
+  calculateNumberOfPages, getScoreboardPage
+  ) where
 
 import Control.Exception (bracket)
 import Database.HDBC.ODBC (connectODBC, Connection)
@@ -19,7 +25,7 @@ data Player = Player {
   username :: String,
   score :: Int,
   rank :: Int
- }
+ } deriving (Show)
 
 withDBConnection = bracket getDatabaseConnection disconnect
 commitWithDBConnection f = withDBConnection (\conn -> f conn >> commit conn)
@@ -28,14 +34,14 @@ insertOne :: Player -> IO ()
 insertOne player = commitWithDBConnection
   (\conn -> do
       stmt <- prepare conn $ "INSERT INTO " ++ getTableName ++ " VALUES (?, ?, ?, ?)"
-      execute stmt $ convertPlayerFieldValuesToSqlArray player
+      execute stmt $ convertPlayerToRow player
   )
 
 insertMany :: [Player] -> IO ()
 insertMany players = commitWithDBConnection
   (\conn -> do
     stmt <- prepare conn $ "INSERT INTO " ++ getTableName ++ " VALUES (?, ?, ?, ?)"
-    let playerSqlArrays = map convertPlayerFieldValuesToSqlArray players
+    let playerSqlArrays = map convertPlayerToRow players
     executeMany stmt playerSqlArrays
   )
 
@@ -76,14 +82,33 @@ deleteMany players = commitWithDBConnection
     executeMany stmt placeholderValues
   )
 
-convertPlayerFieldValuesToSqlArray :: Player -> [SqlValue]
-convertPlayerFieldValuesToSqlArray player = [toSql $ id_num player, toSql $ username player, toSql $ score player, toSql $ rank player]
+convertPlayerToRow :: Player -> [SqlValue]
+convertPlayerToRow player = [toSql $ id_num player, toSql $ username player, toSql $ score player, toSql $ rank player]
+
+convertRowToPlayer :: [SqlValue] -> Player
+convertRowToPlayer row = Player (fromSql $ row !! 0 :: Int) (fromSql $ row !! 1) (fromSql $ row !! 2 :: Int) (fromSql $ row !! 3 :: Int)
 
 -- Pagination logic
-calculateNumberOfPages :: Int -> IO Int
-calculateNumberOfPages playersPerPage = do
+-- TODO: bracket
+
+getPlayersPerPage :: Int
+getPlayersPerPage = 10
+
+calculateNumberOfPages :: IO Int
+calculateNumberOfPages = do
   conn <- getDatabaseConnection
   queryResult <- quickQuery' conn ("SELECT count(*) from " ++ getTableName) []   -- The result here will be something like [[x]] where x is the SqlValue number of items/rows in the table
+  let playersPerPage = getPlayersPerPage
   let totalNumberOfPlayers = fromSql $ head $ head queryResult :: Int
   let floatDivResult = (fromIntegral totalNumberOfPlayers :: Float) / (fromIntegral playersPerPage :: Float)
   return (ceiling floatDivResult :: Int)
+
+getScoreboardPage :: Int -> IO [Player]
+getScoreboardPage targetPageNumber = do
+  conn <- getDatabaseConnection
+  let offsetBegin = (targetPageNumber - 1) * getPlayersPerPage
+  queryResult <- quickQuery' conn (
+                                    " SELECT * from " ++ getTableName ++ "\n \
+                                    \ LIMIT ? OFFSET ?"
+                                  ) [toSql getPlayersPerPage, toSql offsetBegin]
+  return $ map convertRowToPlayer queryResult
