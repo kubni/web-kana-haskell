@@ -58,7 +58,7 @@ checkAnswer :: ResponderM a
 checkAnswer = do
   userAnswerRomaji <- param "answer"
   correctAnswerCharacter <- param "correctAnswer"
-  let correctAnswerRomaji = romajiTable ! T.unpack correctAnswerCharacter
+  let correctAnswerRomaji = romajiTable ! correctAnswerCharacter
   let response = if userAnswerRomaji == correctAnswerRomaji then "correct" else "incorrect"
   send $ text $ T.pack response
 ------------------------------------------
