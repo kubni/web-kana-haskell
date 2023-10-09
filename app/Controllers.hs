@@ -3,6 +3,7 @@
 module Controllers (
   index,
   generateHiraganaCharacter, generateKatakanaCharacter,
+  checkAnswer,
   missing
   ) where
 
@@ -14,14 +15,19 @@ import Web.Twain
 import Control.Monad.IO.Class (liftIO)
 
 
-import KanaTables (hiraganaTable, katakanaTable)
+import KanaTables (hiraganaTable, katakanaTable, romajiTable)
 import RandomGenerators
 --import Models ( Player(Player), insertOne, insertMany)  -- Player(Player) means that we import the Player constructor for type Player
 
 
 --------- Actual controllers -------------
+missing :: ResponderM a
+missing = send $ html "Not found..."
+
+
 index :: ResponderM a
 index = send $ html "Hello World!"
+
 
 generateHiraganaCharacter :: ResponderM a
 generateHiraganaCharacter = do
@@ -34,6 +40,7 @@ generateHiraganaCharacter = do
   let randomChar = randomColumn !! randomCharInt
   send $ text $ T.pack randomChar
 
+
 generateKatakanaCharacter :: ResponderM a
 generateKatakanaCharacter = do
   let columns = keys katakanaTable
@@ -45,8 +52,15 @@ generateKatakanaCharacter = do
   let randomChar = randomColumn !! randomCharInt
   send $ text $ T.pack randomChar
 
-missing :: ResponderM a
-missing = send $ html "Not found..."
+
+-- TODO: Separate romaji tables for hiragana and katakana?
+checkAnswer :: ResponderM a
+checkAnswer = do
+  userAnswerRomaji <- param "answer"
+  correctAnswerCharacter <- param "correctAnswer"
+  let correctAnswerRomaji = romajiTable ! T.unpack correctAnswerCharacter
+  let response = if userAnswerRomaji == correctAnswerRomaji then "correct" else "incorrect"
+  send $ text $ T.pack response
 ------------------------------------------
 
 ---------- Helper functions --------------
