@@ -88,7 +88,8 @@ convertPlayerToRow player = [toSql $ id_num player, toSql $ username player, toS
 convertRowToPlayer :: [SqlValue] -> Player
 convertRowToPlayer row = Player (fromSql $ row !! 0 :: Int) (fromSql $ row !! 1) (fromSql $ row !! 2 :: Int) (fromSql $ row !! 3 :: Int)
 
--- Pagination logic
+
+-------------- Pagination logic -----------------
 -- TODO: bracket
 
 getPlayersPerPage :: Int
@@ -112,3 +113,6 @@ getScoreboardPage targetPageNumber = do
                                     \ LIMIT ? OFFSET ?"
                                   ) [toSql getPlayersPerPage, toSql offsetBegin]
   return $ map convertRowToPlayer queryResult
+
+
+-------------------------------------------------
