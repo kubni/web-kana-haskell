@@ -19,7 +19,6 @@ import Control.Monad.IO.Class (liftIO)
 import KanaTables (hiraganaTable, katakanaTable, romajiTable)
 import RandomGenerators
 import qualified Models as M
---import Models ( Player(Player), insertOne, insertMany)  -- Player(Player) means that we import the Player constructor for type Player
 
 
 --------- Actual controllers -------------
@@ -70,8 +69,4 @@ getScoreboardPage = do
   playersOnThisPage <- liftIO $ M.getScoreboardPage $ read targetPage
   send $ json playersOnThisPage
 
-
-
-
 ------------------------------------------
-

@@ -14,6 +14,7 @@ import Database.HDBC as HDBC
 import Data.Aeson
 
 
+
 getDatabaseName :: String
 getDatabaseName = "DSN=MariaDBTest"
 
@@ -38,6 +39,14 @@ instance ToJSON Player where
 withDBConnection = bracket getDatabaseConnection disconnect
 commitWithDBConnection f = withDBConnection (\conn -> f conn >> commit conn)
 
+convertPlayerToRow :: Player -> [SqlValue]
+convertPlayerToRow player = [toSql $ id_num player, toSql $ username player, toSql $ score player, toSql $ rank player]
+
+convertRowToPlayer :: [SqlValue] -> Player
+convertRowToPlayer row = Player (fromSql $ row !! 0 :: Int) (fromSql $ row !! 1) (fromSql $ row !! 2 :: Int) (fromSql $ row !! 3 :: Int)
+
+
+------------ Basic DB operations ----------------
 insertOne :: Player -> IO ()
 insertOne player = commitWithDBConnection
   (\conn -> do
@@ -90,15 +99,10 @@ deleteMany players = commitWithDBConnection
     executeMany stmt placeholderValues
   )
 
-convertPlayerToRow :: Player -> [SqlValue]
-convertPlayerToRow player = [toSql $ id_num player, toSql $ username player, toSql $ score player, toSql $ rank player]
-
-convertRowToPlayer :: [SqlValue] -> Player
-convertRowToPlayer row = Player (fromSql $ row !! 0 :: Int) (fromSql $ row !! 1) (fromSql $ row !! 2 :: Int) (fromSql $ row !! 3 :: Int)
-
-
 -------------- Pagination logic -----------------
--- TODO: bracket
+
+-- TODO: Bracket variant but for reading operations (those that don't need commit at the end). withDBConnection is probably enough.
+-- TODO: Add `disconnect conn` at the end of all db operations
 
 getPlayersPerPage :: Int
 getPlayersPerPage = 10
@@ -124,3 +128,13 @@ getScoreboardPage targetPageNumber = do
 
 
 -------------------------------------------------
+
+
+calculatePlayerRank :: Int -> IO Int
+calculatePlayerRank playerScore = do
+  conn <- getDatabaseConnection
+  queryResult <- quickQuery' conn (" SELECT count(*) FROM " ++ getTableName ++ "\n \
+                                   \ WHERE score >= ?") [toSql playerScore]
+  disconnect conn
+  let rank = fromSql (head $ head queryResult) + 1
+  return rank
