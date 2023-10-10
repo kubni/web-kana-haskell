@@ -4,6 +4,7 @@ module Controllers (
   index,
   generateHiraganaCharacter, generateKatakanaCharacter,
   checkAnswer,
+  getScoreboardPage,
   missing
   ) where
 
@@ -17,6 +18,7 @@ import Control.Monad.IO.Class (liftIO)
 
 import KanaTables (hiraganaTable, katakanaTable, romajiTable)
 import RandomGenerators
+import qualified Models as M
 --import Models ( Player(Player), insertOne, insertMany)  -- Player(Player) means that we import the Player constructor for type Player
 
 
@@ -61,7 +63,15 @@ checkAnswer = do
   let correctAnswerRomaji = romajiTable ! correctAnswerCharacter
   let response = if userAnswerRomaji == correctAnswerRomaji then "correct" else "incorrect"
   send $ text $ T.pack response
+
+getScoreboardPage :: ResponderM a
+getScoreboardPage = do
+  targetPage <- param "pageNumber"
+  playersOnThisPage <- liftIO $ M.getScoreboardPage $ read targetPage
+  send $ json playersOnThisPage
+
+
+
+
 ------------------------------------------
 
----------- Helper functions --------------
-------------------------------------------

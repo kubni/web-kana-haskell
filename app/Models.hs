@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Models (
   Player(..),
   insertOne, insertMany,
@@ -10,6 +12,11 @@ import Control.Exception (bracket)
 import Database.HDBC.ODBC (connectODBC, Connection)
 import Database.HDBC as HDBC
 
+
+----- TESTING -----
+import Data.Aeson
+import GHC.Generics
+-------------------
 
 getDatabaseName :: String
 getDatabaseName = "DSN=MariaDBTest"
@@ -25,7 +32,11 @@ data Player = Player {
   username :: String,
   score :: Int,
   rank :: Int
- } deriving (Show)
+ } deriving (Show, Generic)
+
+instance ToJSON Player where
+  -- toJSON (Player id_num username score rank) = object ["id" .= id_num, "username" .= username, "score" .= score, "rank" .= rank ]
+  toEncoding = genericToEncoding defaultOptions
 
 withDBConnection = bracket getDatabaseConnection disconnect
 commitWithDBConnection f = withDBConnection (\conn -> f conn >> commit conn)

@@ -37,6 +37,7 @@ executable web-kana-backend
         containers,
         text,
         random,
+        aeson,
         warp,
         twain,
         HDBC,
