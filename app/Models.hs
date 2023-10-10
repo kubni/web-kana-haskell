@@ -103,21 +103,8 @@ deleteMany players = commitWithDBConnection
 
 -------------- Pagination logic -----------------
 
--- TODO: Bracket variant but for reading operations (those that don't need commit at the end). withDBConnection is probably enough.
--- TODO: Add `disconnect conn` at the end of all db operations
-
 getPlayersPerPage :: Int
 getPlayersPerPage = 10
-
--- calculateNumberOfPages :: IO Int
--- calculateNumberOfPages = do
---   conn <- getDatabaseConnection
---   queryResult <- quickQuery' conn ("SELECT count(*) from " ++ getTableName) []   -- The result here will be something like [[x]] where x is the SqlValue number of items/rows in the table
---   let playersPerPage = getPlayersPerPage
---   let totalNumberOfPlayers = fromSql $ head $ head queryResult :: Int
---   let floatDivResult = (fromIntegral totalNumberOfPlayers :: Float) / (fromIntegral playersPerPage :: Float)
---   return (ceiling floatDivResult :: Int)
-
 
 calculateNumberOfPages :: IO Int
 calculateNumberOfPages = withDBConnection
@@ -128,18 +115,6 @@ calculateNumberOfPages = withDBConnection
     let floatDivResult = (fromIntegral totalNumberOfPlayers :: Float) / (fromIntegral playersPerPage :: Float)
     return (ceiling floatDivResult :: Int)
   )
-
-
-
--- getScoreboardPage :: Int -> IO [Player]
--- getScoreboardPage targetPageNumber = do
---   conn <- getDatabaseConnection
---   let offsetBegin = (targetPageNumber - 1) * getPlayersPerPage
---   queryResult <- quickQuery' conn (
---                                     " SELECT * from " ++ getTableName ++ "\n \
---                                     \ LIMIT ? OFFSET ?"
---                                   ) [toSql getPlayersPerPage, toSql offsetBegin]
---   return $ map convertRowToPlayer queryResult
 
 getScoreboardPage :: Int -> IO [Player]
 getScoreboardPage targetPageNumber = withDBConnection
