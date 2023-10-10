@@ -109,42 +109,67 @@ deleteMany players = commitWithDBConnection
 getPlayersPerPage :: Int
 getPlayersPerPage = 10
 
+-- calculateNumberOfPages :: IO Int
+-- calculateNumberOfPages = do
+--   conn <- getDatabaseConnection
+--   queryResult <- quickQuery' conn ("SELECT count(*) from " ++ getTableName) []   -- The result here will be something like [[x]] where x is the SqlValue number of items/rows in the table
+--   let playersPerPage = getPlayersPerPage
+--   let totalNumberOfPlayers = fromSql $ head $ head queryResult :: Int
+--   let floatDivResult = (fromIntegral totalNumberOfPlayers :: Float) / (fromIntegral playersPerPage :: Float)
+--   return (ceiling floatDivResult :: Int)
+
+
 calculateNumberOfPages :: IO Int
-calculateNumberOfPages = do
-  conn <- getDatabaseConnection
-  queryResult <- quickQuery' conn ("SELECT count(*) from " ++ getTableName) []   -- The result here will be something like [[x]] where x is the SqlValue number of items/rows in the table
-  let playersPerPage = getPlayersPerPage
-  let totalNumberOfPlayers = fromSql $ head $ head queryResult :: Int
-  let floatDivResult = (fromIntegral totalNumberOfPlayers :: Float) / (fromIntegral playersPerPage :: Float)
-  return (ceiling floatDivResult :: Int)
+calculateNumberOfPages = withDBConnection
+  (\conn -> do
+    queryResult <- quickQuery' conn ("SELECT count(*) from " ++ getTableName) []   -- The result here will be something like [[x]] where x is the SqlValue number of items/rows in the table
+    let playersPerPage = getPlayersPerPage
+    let totalNumberOfPlayers = fromSql $ head $ head queryResult :: Int
+    let floatDivResult = (fromIntegral totalNumberOfPlayers :: Float) / (fromIntegral playersPerPage :: Float)
+    return (ceiling floatDivResult :: Int)
+  )
+
+
+
+-- getScoreboardPage :: Int -> IO [Player]
+-- getScoreboardPage targetPageNumber = do
+--   conn <- getDatabaseConnection
+--   let offsetBegin = (targetPageNumber - 1) * getPlayersPerPage
+--   queryResult <- quickQuery' conn (
+--                                     " SELECT * from " ++ getTableName ++ "\n \
+--                                     \ LIMIT ? OFFSET ?"
+--                                   ) [toSql getPlayersPerPage, toSql offsetBegin]
+--   return $ map convertRowToPlayer queryResult
 
 getScoreboardPage :: Int -> IO [Player]
-getScoreboardPage targetPageNumber = do
-  conn <- getDatabaseConnection
-  let offsetBegin = (targetPageNumber - 1) * getPlayersPerPage
-  queryResult <- quickQuery' conn (
-                                    " SELECT * from " ++ getTableName ++ "\n \
-                                    \ LIMIT ? OFFSET ?"
-                                  ) [toSql getPlayersPerPage, toSql offsetBegin]
-  return $ map convertRowToPlayer queryResult
-
+getScoreboardPage targetPageNumber = withDBConnection
+  (\conn -> do
+    let offsetBegin = (targetPageNumber - 1) * getPlayersPerPage
+    queryResult <- quickQuery' conn (
+                                      " SELECT * from " ++ getTableName ++ "\n \
+                                      \ LIMIT ? OFFSET ?"
+                                    ) [toSql getPlayersPerPage, toSql offsetBegin]
+    return $ map convertRowToPlayer queryResult
+  )
 
 -------------------------------------------------
 
 calculatePlayerRank :: Int -> IO Int
-calculatePlayerRank playerScore = do
-  conn <- getDatabaseConnection
-  queryResult <- quickQuery' conn (" SELECT count(*) FROM " ++ getTableName ++ "\n \
-                                   \ WHERE score >= ?") [toSql playerScore]
-  disconnect conn
-  let rank = fromSql (head $ head queryResult) + 1
-  return rank
+calculatePlayerRank playerScore = withDBConnection
+  (\conn -> do
+    queryResult <- quickQuery' conn (" SELECT count(*) FROM " ++ getTableName ++ "\n \
+                                    \ WHERE score >= ?") [toSql playerScore]
+    disconnect conn
+    let rank = fromSql (head $ head queryResult) + 1
+    return rank
+  )
 
 checkIfUsernameAlreadyExists :: String -> IO Bool
-checkIfUsernameAlreadyExists playerName = do
-  conn <- getDatabaseConnection
-  queryResult <- quickQuery' conn (" SELECT count(*) FROM " ++ getTableName ++ "\n \
-                                   \ WHERE username = ?") [toSql playerName]
-  disconnect conn
-  let usernameCount = fromSql $ head $ head queryResult :: Int
-  return $ usernameCount /= 0
+checkIfUsernameAlreadyExists playerName = withDBConnection
+  (\conn -> do
+    queryResult <- quickQuery' conn (" SELECT count(*) FROM " ++ getTableName ++ "\n \
+                                    \ WHERE username = ?") [toSql playerName]
+    disconnect conn
+    let usernameCount = fromSql $ head $ head queryResult :: Int
+    return $ usernameCount /= 0
+  )
