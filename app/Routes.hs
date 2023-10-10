@@ -12,6 +12,7 @@ routes =
   , get "/game/generateKatakanaCharacter" generateKatakanaCharacter
   , post "/game/checkAnswer" checkAnswer
   , post "/game/getScoreboardPage/:pageNumber" getScoreboardPage
+  , post "/game/checkUsername/:username" checkUsername
   ]
 
 routeNotFound :: Application

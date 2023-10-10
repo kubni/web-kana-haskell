@@ -5,6 +5,7 @@ module Controllers (
   generateHiraganaCharacter, generateKatakanaCharacter,
   checkAnswer,
   getScoreboardPage,
+  checkUsername,
   missing
   ) where
 
@@ -70,3 +71,16 @@ getScoreboardPage = do
   send $ json playersOnThisPage
 
 ------------------------------------------
+
+checkUsername :: ResponderM a
+checkUsername = do
+  targetUsername <- param "username"
+  isUsernameValid <- liftIO $ M.checkIfUsernameAlreadyExists targetUsername
+  let response = show isUsernameValid
+  send $ text $ T.pack response
+
+
+
+
+
+-- TODO: Send text responses as json instead?

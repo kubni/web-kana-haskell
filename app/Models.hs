@@ -5,7 +5,9 @@ module Models (
   insertOne, insertMany,
   updateOne, updateMany,
   deleteOne, deleteMany,
-  calculateNumberOfPages, getScoreboardPage
+  calculateNumberOfPages, getScoreboardPage,
+  calculatePlayerRank,
+  checkIfUsernameAlreadyExists
   ) where
 
 import Control.Exception (bracket)
@@ -129,7 +131,6 @@ getScoreboardPage targetPageNumber = do
 
 -------------------------------------------------
 
-
 calculatePlayerRank :: Int -> IO Int
 calculatePlayerRank playerScore = do
   conn <- getDatabaseConnection
@@ -138,3 +139,12 @@ calculatePlayerRank playerScore = do
   disconnect conn
   let rank = fromSql (head $ head queryResult) + 1
   return rank
+
+checkIfUsernameAlreadyExists :: String -> IO Bool
+checkIfUsernameAlreadyExists playerName = do
+  conn <- getDatabaseConnection
+  queryResult <- quickQuery' conn (" SELECT count(*) FROM " ++ getTableName ++ "\n \
+                                   \ WHERE username = ?") [toSql playerName]
+  disconnect conn
+  let usernameCount = fromSql $ head $ head queryResult :: Int
+  return $ usernameCount /= 0
