@@ -133,8 +133,7 @@ calculatePlayerRank :: Int -> IO Int
 calculatePlayerRank playerScore = withDBConnection
   (\conn -> do
     queryResult <- quickQuery' conn (" SELECT count(*) FROM " ++ getTableName ++ "\n \
-                                    \ WHERE score >= ?") [toSql playerScore]
-    disconnect conn
+                                     \ WHERE score >= ?") [toSql playerScore]
     let rank = fromSql (head $ head queryResult) + 1
     return rank
   )
@@ -143,8 +142,7 @@ checkIfUsernameAlreadyExists :: String -> IO Bool
 checkIfUsernameAlreadyExists playerName = withDBConnection
   (\conn -> do
     queryResult <- quickQuery' conn (" SELECT count(*) FROM " ++ getTableName ++ "\n \
-                                    \ WHERE username = ?") [toSql playerName]
-    disconnect conn
+                                     \ WHERE username = ?") [toSql playerName]
     let usernameCount = fromSql $ head $ head queryResult :: Int
     return $ usernameCount /= 0
   )
