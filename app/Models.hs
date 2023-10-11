@@ -7,7 +7,8 @@ module Models (
   deleteOne, deleteMany,
   calculateNumberOfPages, getScoreboardPage,
   calculatePlayerRank,
-  checkIfUsernameAlreadyExists
+  checkIfUsernameAlreadyExists,
+  updateRanksOfPlayersAfterThisOne
   ) where
 
 import Control.Exception (bracket)
@@ -129,6 +130,28 @@ getScoreboardPage targetPageNumber = withDBConnection
 
 -------------------------------------------------
 
+getPlayerScore :: Int -> IO Int
+getPlayerScore id_num = withDBConnection
+  (\conn -> do
+      queryResult <- quickQuery' conn (" SELECT score \n \
+                                       \ FROM " ++ getTableName ++ "\n \
+                                       \ WHERE id = ?"
+                                      ) [toSql id_num]
+      let score = fromSql $ head $ head queryResult :: Int
+      return score
+  )
+
+getPlayerRank :: Int -> IO Int
+getPlayerRank id_num = withDBConnection
+  (\conn -> do
+      queryResult <- quickQuery' conn (" SELECT rank \n \
+                                       \ FROM " ++ getTableName ++ "\n \
+                                       \ WHERE id = ?"
+                                      ) [toSql id_num]
+      let rank = fromSql $ head $ head queryResult :: Int
+      return rank
+  )
+
 calculatePlayerRank :: Int -> IO Int
 calculatePlayerRank playerScore = withDBConnection
   (\conn -> do
@@ -137,6 +160,18 @@ calculatePlayerRank playerScore = withDBConnection
     let rank = fromSql (head $ head queryResult) + 1
     return rank
   )
+
+updateRanksOfPlayersAfterThisOne :: Int -> IO ()
+updateRanksOfPlayersAfterThisOne id_num = commitWithDBConnection
+  (\conn -> do
+      stmt <- prepare conn (" UPDATE " ++ getTableName ++ "\n \
+                            \ SET rank = rank + 1 \
+                            \ WHERE score < ?"
+                           )
+      currentPlayerScore <- getPlayerScore id_num
+      execute stmt [toSql currentPlayerScore]
+  )
+
 
 checkIfUsernameAlreadyExists :: String -> IO Bool
 checkIfUsernameAlreadyExists playerName = withDBConnection

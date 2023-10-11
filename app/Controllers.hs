@@ -64,13 +64,12 @@ checkAnswer = do
   let response = if userAnswerRomaji == correctAnswerRomaji then "correct" else "incorrect"
   send $ text $ T.pack response
 
+
 getScoreboardPage :: ResponderM a
 getScoreboardPage = do
   targetPage <- param "pageNumber"
   playersOnThisPage <- liftIO $ M.getScoreboardPage $ read targetPage
   send $ json playersOnThisPage
-
-------------------------------------------
 
 checkUsername :: ResponderM a
 checkUsername = do
@@ -81,8 +80,4 @@ checkUsername = do
   response <- liftIO isValid
   send $ text $ T.pack $ show response
 
-
-
-
-
--- TODO: Send text responses as json instead?
+------------------------------------------

@@ -3,7 +3,7 @@ module Main where
 import Network.Wai.Handler.Warp (run)
 
 import Routes (routes, routeNotFound)
-import Models
+-- import Models -- For quick testing
 main :: IO ()
 main = do
   print "Server is starting at localhost:8080. Press C-c to exit."
