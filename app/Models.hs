@@ -39,8 +39,11 @@ instance ToJSON Player where
   toJSON (Player id_num username score rank) = object ["id" .= id_num, "username" .= username, "score" .= score, "rank" .= rank]
   toEncoding (Player id_num username score rank) = pairs ("id" .= id_num <> "username" .= username <> "score" .= score <> "rank" .= rank)
 
+
+-- TODO: HDBC's `withTransaction`
 withDBConnection = bracket getDatabaseConnection disconnect
-commitWithDBConnection f = withDBConnection (\conn -> f conn >> commit conn)
+-- commitWithDBConnection f = withDBConnection (\conn -> f conn >> commit conn)
+doTransaction f = withDBConnection (\conn -> withTransaction conn f)
 
 convertPlayerToRow :: Player -> [SqlValue]
 convertPlayerToRow player = [toSql $ id_num player, toSql $ username player, toSql $ score player, toSql $ rank player]
@@ -50,23 +53,23 @@ convertRowToPlayer row = Player (fromSql $ row !! 0 :: Int) (fromSql $ row !! 1)
 
 
 ------------ Basic DB operations ----------------
-insertOne :: Player -> IO ()
-insertOne player = commitWithDBConnection
+insertOne :: Player -> IO Integer
+insertOne player = doTransaction
   (\conn -> do
       stmt <- prepare conn $ "INSERT INTO " ++ getTableName ++ " VALUES (?, ?, ?, ?)"
       execute stmt $ convertPlayerToRow player
   )
 
 insertMany :: [Player] -> IO ()
-insertMany players = commitWithDBConnection
+insertMany players = doTransaction
   (\conn -> do
     stmt <- prepare conn $ "INSERT INTO " ++ getTableName ++ " VALUES (?, ?, ?, ?)"
     let playerSqlArrays = map convertPlayerToRow players
     executeMany stmt playerSqlArrays
   )
 
-updateOne :: Player -> IO ()
-updateOne updatedPlayer = commitWithDBConnection
+updateOne :: Player -> IO Integer
+updateOne updatedPlayer = doTransaction
   (\conn -> do
       stmt <- prepare conn $ " UPDATE " ++ getTableName ++ "\n \
                          \ SET score=?, rank=?\n \
@@ -75,7 +78,7 @@ updateOne updatedPlayer = commitWithDBConnection
   )
 
 updateMany :: [Player] -> IO ()
-updateMany updatedPlayers = commitWithDBConnection
+updateMany updatedPlayers = doTransaction
   (\conn -> do
     stmt <- prepare conn $ "  UPDATE " ++ getTableName ++ "\n \
                             \ SET score=?, rank=?\n \
@@ -85,8 +88,8 @@ updateMany updatedPlayers = commitWithDBConnection
   )
 
 -- TODO: id_name is enough for deletion, but for the sake of it having the same form as other db operations i have used Player -> IO() instead of Int -> IO() -- *subject to change*
-deleteOne :: Player -> IO ()
-deleteOne player = commitWithDBConnection
+deleteOne :: Player -> IO Integer
+deleteOne player = doTransaction
   (\conn -> do
     stmt <- prepare conn $ " DELETE FROM " ++ getTableName ++ "\n \
                          \ WHERE id=?"
@@ -94,7 +97,7 @@ deleteOne player = commitWithDBConnection
   )
 
 deleteMany :: [Player] -> IO()
-deleteMany players = commitWithDBConnection
+deleteMany players = doTransaction
   (\conn -> do
     stmt <- prepare conn $ " DELETE FROM " ++ getTableName ++ "\n \
                           \ WHERE id=?"
@@ -161,8 +164,8 @@ calculatePlayerRank playerScore = withDBConnection
     return rank
   )
 
-updateRanksOfPlayersAfterThisOne :: Int -> IO ()
-updateRanksOfPlayersAfterThisOne id_num = commitWithDBConnection
+updateRanksOfPlayersAfterThisOne :: Int -> IO Integer
+updateRanksOfPlayersAfterThisOne id_num = doTransaction
   (\conn -> do
       stmt <- prepare conn (" UPDATE " ++ getTableName ++ "\n \
                             \ SET rank = rank + 1 \
