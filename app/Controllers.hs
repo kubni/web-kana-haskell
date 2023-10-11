@@ -75,9 +75,11 @@ getScoreboardPage = do
 checkUsername :: ResponderM a
 checkUsername = do
   targetUsername <- param "username"
-  isUsernameValid <- liftIO $ M.checkIfUsernameAlreadyExists targetUsername
-  let response = show isUsernameValid
-  send $ text $ T.pack response
+  let isValid = case targetUsername of
+                  "" -> pure False
+                  _ -> M.checkIfUsernameAlreadyExists targetUsername
+  response <- liftIO isValid
+  send $ text $ T.pack $ show response
 
 
 
