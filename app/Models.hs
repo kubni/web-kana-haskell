@@ -6,9 +6,11 @@ module Models (
   updateOne, updateMany,
   deleteOne, deleteMany,
   calculateNumberOfPages, getScoreboardPage,
+  getPlayerScore,
+  getPlayerRank,
   calculatePlayerRank,
-  checkIfUsernameAlreadyExists,
-  updateRanksOfPlayersAfterThisOne
+  updateRanksOfPlayersAfterThisOne,
+  checkIfUsernameAlreadyExists
   ) where
 
 import Control.Exception (bracket)
